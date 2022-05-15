@@ -201,14 +201,12 @@ class CheckerEngine():
             if VERBOSE:
                 print("Illegal move: Checkers can only move Diagonally")
             return (False, move_is_jump, jumped_piece)
-            
         
         # Now, check if the move is going backwards for a Black piece
         if (moving_piece.get_y_pos() >= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
             if VERBOSE:
                 print("Illegal move: Checkers that have not been promoted to King can not move backwards")
             return (False, move_is_jump, jumped_piece)
-            
         
         # Now, check if the move is going backwards for a Red piece
         if (moving_piece.get_y_pos() <= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
@@ -320,6 +318,6 @@ def render_board(board: CheckerBoard):
         
     return tabulate(tabulate_array, tablefmt="grid")
 
-debug = CheckerEngine(3, 6)
+debug = CheckerEngine(3, 3)
 
 print(render_board(debug.board))
