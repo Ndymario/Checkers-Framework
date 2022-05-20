@@ -21,13 +21,13 @@ Y: Row the piece is on from 0 to 15 (in binary)
 
 class Checker():
     def __init__(self, king: bool, is_red: bool, x_pos: int, y_pos: int) -> None:
-        # Make sure the width is in the range 0-15
+        # Make sure the x_ps is in the range 0-15
         if x_pos > 15:
             x_pos = 15
         if x_pos < 0:
             x_pos = 0
         
-        # Make sure the width is in the range 0-15
+        # Make sure the y_pos is in the range 0-15
         if y_pos > 15:
             y_pos = 15
         if y_pos < 0:
@@ -36,10 +36,7 @@ class Checker():
         self.data = (king<<9) | (is_red<<8) | (x_pos<<4) | (y_pos)
         
     def is_king(self):
-        if ((self.data & 0b1000000000)>>9) == 1:
-            return True
-        else:
-            return False
+        return (self.data & 0b1000000000)>>9
     
     def get_color(self):
         if ((self.data & 0b0100000000)>>8) == 1:
@@ -85,10 +82,7 @@ class CheckerBoard():
     def generate_board(self):
         
         # Determine how many rows of checkers should be generated
-        if self.height % 2 == 0:
-            rows_to_generate = floor((self.height - 1)/2)
-        else:
-            rows_to_generate = floor(self.height/2)
+        rows_to_generate = floor((self.height - 1)/2)
             
         # Generate the pieces, don't place a piece on a "red" square
         current_row = 0
@@ -168,6 +162,10 @@ class CheckerEngine():
         move_is_jump = False
         jumped_piece = None
         
+        # Calculate the move's x/y pos for use later
+        move_x_pos = move >> 4
+        move_y_pos = move & 0b00001111
+        
         # First, make sure the move passed is a valid move to parse
         if (move < 0) or (move > 255):
             if VERBOSE:
@@ -179,44 +177,44 @@ class CheckerEngine():
         '''
         # Now, make sure the move is on the board
             # Checking X
-        if ((move >> 4) >= self.board.width):
+        if ((move_x_pos) >= self.board.width):
             if VERBOSE:
                 print("Illegal move: Move is not on the grid")
             return (False, move_is_jump, jumped_piece)
             
             # Checking Y
-        if ((move & 0b00001111) >= self.board.height):
+        if ((move_y_pos) >= self.board.height):
             if VERBOSE:
                 print("Illegal move: Move is not on the grid")
             return (False, move_is_jump, jumped_piece)
         
         # Now, make sure the move is not to a red square
-        if self.board.red_check((move & 0b00001111), (move >> 4)):
+        if self.board.red_check((move_y_pos), (move_x_pos)):
             if VERBOSE:
                 print("Illegal move: Checkers can only move to Black Squares")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is diagonal
-        if (moving_piece.get_x_pos() == (move >> 4)) or (moving_piece.get_y_pos() == (move & 0b00001111)):
+        if (moving_piece.get_x_pos() == (move_x_pos)) or (moving_piece.get_y_pos() == (move_y_pos)):
             if VERBOSE:
                 print("Illegal move: Checkers can only move Diagonally")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is going backwards for a Black piece
-        if (moving_piece.get_y_pos() >= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
+        if (moving_piece.get_y_pos() >= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
             if VERBOSE:
                 print("Illegal move: Checkers that have not been promoted to King can not move backwards")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is going backwards for a Red piece
-        if (moving_piece.get_y_pos() <= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
+        if (moving_piece.get_y_pos() <= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
             if VERBOSE:
                 print("Illegal move: Checkers that have not been promoted to King can not move backwards")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the square is occupied
         for piece in self.board.pieces:
-            if (piece.get_x_pos() == (move >> 4)) and (piece.get_y_pos() == (move & 0b00001111)):
+            if (piece.get_x_pos() == (move_x_pos)) and (piece.get_y_pos() == (move_y_pos)):
                 if VERBOSE:
                     print("Illegal move: Checkers can not move to an occupied square")
                 return (False, move_is_jump, jumped_piece)
@@ -225,26 +223,26 @@ class CheckerEngine():
         Jumping Logic
         '''
         # Determine if the move is attempting to be a jump
-        if (moving_piece.get_x_pos() > ((move >> 4) + 1)) or (moving_piece.get_x_pos() < ((move >> 4) - 1)):
+        if (moving_piece.get_x_pos() > ((move_x_pos) + 1)) or (moving_piece.get_x_pos() < ((move_x_pos) - 1)):
             move_is_jump = True
             
         if move_is_jump:
             
             # Now, check if the jump is going backwards for a Black piece
-            if (moving_piece.get_y_pos() >= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
+            if (moving_piece.get_y_pos() >= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
                 if VERBOSE:
                     print("Illegal move: Checkers that have not been promoted to King can not jump backwards")
                 return (False, move_is_jump, jumped_piece)
             
             # Now, check if the move is going backwards for a Red piece
-            if (moving_piece.get_y_pos() <= (move & 0b00001111)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
+            if (moving_piece.get_y_pos() <= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
                 if VERBOSE:
                     print("Illegal move: Checkers that have not been promoted to King can not jump backwards")
                 return (False, move_is_jump, jumped_piece)
             
             # Now, check if the piece being jumped over is the same color of the piece making the jump
             for piece in self.board.pieces:
-                if (piece.get_x_pos() == ((move >> 4) + 1)) and (piece.get_y_pos() == ((move & 0b00001111) + 1)):
+                if (piece.get_x_pos() == ((move_x_pos) + 1)) and (piece.get_y_pos() == ((move_y_pos) + 1)):
                     if piece.get_color() == moving_piece.get_color():
                         if VERBOSE:
                             print("Illegal move: Checkers can not jump oveer Checkers of their own color")
@@ -253,7 +251,7 @@ class CheckerEngine():
                     else:
                         jumped_piece = piece
                     
-                if (piece.get_x_pos() == ((move >> 4) - 1)) and (piece.get_y_pos() == ((move & 0b00001111) - 1)):
+                if (piece.get_x_pos() == ((move_x_pos) - 1)) and (piece.get_y_pos() == ((move_y_pos) - 1)):
                     if piece.get_color() == moving_piece.get_color():
                         if VERBOSE:
                             print("Illegal move: Checkers can not jump oveer Checkers of their own color")
@@ -267,11 +265,11 @@ class CheckerEngine():
         '''
         # Promote the piece if it reaches the other end of the board
         if moving_piece.get_color() == "Red":
-            if (move & 0b00001111) == 0:
+            if (move_y_pos) == 0:
                 moving_piece.data = (moving_piece.data | 0b1000000000)
         
         else:
-            if ((move & 0b00001111) == (self.board.height - 1)):
+            if ((move_y_pos) == (self.board.height - 1)):
                 moving_piece.data = (moving_piece.data | 0b1000000000)
             
         # If this step is reached, the move should be valid!
@@ -318,6 +316,7 @@ def render_board(board: CheckerBoard):
         
     return tabulate(tabulate_array, tablefmt="grid")
 
-debug = CheckerEngine(3, 3)
+if __name__ == "__main__":
+    debug = CheckerEngine(3, 3)
 
-print(render_board(debug.board))
+    print(render_board(debug.board))
