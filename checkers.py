@@ -2,11 +2,14 @@
 # A "simple" game of checkers by Nolan Y.  #
 ############################################
 
+from time import asctime
 from tabulate import tabulate
 from math import floor
+import logging
 
-# Verbose will print any errors to the console, specifically for when a move is not legal
-VERBOSE = True
+level = logging.WARNING
+fmt = '[%(levelname)s] %(asctime)s - %(message)s'
+logging.basicConfig(format=fmt, level=level)
 
 '''
 Trying to over-engineer this, the data for each checker is stored in this format:
@@ -131,7 +134,7 @@ The rules of checkers:
 
 3) Kings
     a. Checkers are promoted to king when the checker reaches the other end of the board
-    b. Kings are allowed to move in any direction
+    b. Kings are allowed to move in any diagnal direction
     c. Kings are allowed to jump in any direction if the jump is legal
     
 4) Ending the Game
@@ -168,8 +171,7 @@ class CheckerEngine():
         
         # First, make sure the move passed is a valid move to parse
         if (move < 0) or (move > 255):
-            if VERBOSE:
-                print("Invalid move parameter")
+            logging.warning("Invalid move parameter")
             return (False, move_is_jump, jumped_piece)
         
         '''
@@ -178,45 +180,38 @@ class CheckerEngine():
         # Now, make sure the move is on the board
             # Checking X
         if ((move_x_pos) >= self.board.width):
-            if VERBOSE:
-                print("Illegal move: Move is not on the grid")
+            logging.warning("Illegal move: Move is not on the grid")
             return (False, move_is_jump, jumped_piece)
             
             # Checking Y
         if ((move_y_pos) >= self.board.height):
-            if VERBOSE:
-                print("Illegal move: Move is not on the grid")
+            logging.warning("Illegal move: Move is not on the grid")
             return (False, move_is_jump, jumped_piece)
         
         # Now, make sure the move is not to a red square
         if self.board.red_check((move_y_pos), (move_x_pos)):
-            if VERBOSE:
-                print("Illegal move: Checkers can only move to Black Squares")
+            logging.warning("Illegal move: Checkers can only move to Black Squares")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is diagonal
         if (moving_piece.get_x_pos() == (move_x_pos)) or (moving_piece.get_y_pos() == (move_y_pos)):
-            if VERBOSE:
-                print("Illegal move: Checkers can only move Diagonally")
+            logging.warning("Illegal move: Checkers can only move Diagonally")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is going backwards for a Black piece
         if (moving_piece.get_y_pos() >= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
-            if VERBOSE:
-                print("Illegal move: Checkers that have not been promoted to King can not move backwards")
+            logging.warning("Illegal move: Checkers that have not been promoted to King can not move backwards")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the move is going backwards for a Red piece
         if (moving_piece.get_y_pos() <= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
-            if VERBOSE:
-                print("Illegal move: Checkers that have not been promoted to King can not move backwards")
+            logging.warning("Illegal move: Checkers that have not been promoted to King can not move backwards")
             return (False, move_is_jump, jumped_piece)
         
         # Now, check if the square is occupied
         for piece in self.board.pieces:
             if (piece.get_x_pos() == (move_x_pos)) and (piece.get_y_pos() == (move_y_pos)):
-                if VERBOSE:
-                    print("Illegal move: Checkers can not move to an occupied square")
+                logging.warning("Illegal move: Checkers can not move to an occupied square")
                 return (False, move_is_jump, jumped_piece)
         
         '''
@@ -230,22 +225,19 @@ class CheckerEngine():
             
             # Now, check if the jump is going backwards for a Black piece
             if (moving_piece.get_y_pos() >= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Black"):
-                if VERBOSE:
-                    print("Illegal move: Checkers that have not been promoted to King can not jump backwards")
+                logging.warning("Illegal move: Checkers that have not been promoted to King can not jump backwards")
                 return (False, move_is_jump, jumped_piece)
             
             # Now, check if the move is going backwards for a Red piece
             if (moving_piece.get_y_pos() <= (move_y_pos)) and (moving_piece.is_king() == False) and (moving_piece.get_color() == "Red"):
-                if VERBOSE:
-                    print("Illegal move: Checkers that have not been promoted to King can not jump backwards")
+                logging.warning("Illegal move: Checkers that have not been promoted to King can not jump backwards")
                 return (False, move_is_jump, jumped_piece)
             
             # Now, check if the piece being jumped over is the same color of the piece making the jump
             for piece in self.board.pieces:
                 if (piece.get_x_pos() == ((move_x_pos) + 1)) and (piece.get_y_pos() == ((move_y_pos) + 1)):
                     if piece.get_color() == moving_piece.get_color():
-                        if VERBOSE:
-                            print("Illegal move: Checkers can not jump oveer Checkers of their own color")
+                        logging.warning("Illegal move: Checkers can not jump oveer Checkers of their own color")
                         return (False, move_is_jump, jumped_piece)
                         
                     else:
@@ -253,8 +245,7 @@ class CheckerEngine():
                     
                 if (piece.get_x_pos() == ((move_x_pos) - 1)) and (piece.get_y_pos() == ((move_y_pos) - 1)):
                     if piece.get_color() == moving_piece.get_color():
-                        if VERBOSE:
-                            print("Illegal move: Checkers can not jump oveer Checkers of their own color")
+                        logging.warning("Illegal move: Checkers can not jump oveer Checkers of their own color")
                         return (False, move_is_jump, jumped_piece)
                     
                     else:
